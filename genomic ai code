@@ -1,0 +1,23 @@
+import torch
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
+# Load model
+tokenizer = AutoTokenizer.from_pretrained("genai-system/genomic-transformer")
+model = AutoModelForSequenceClassification.from_pretrained("genai-system/genomic-transformer")
+
+def predict_sequence(seq: str):
+    inputs = tokenizer(seq, return_tensors="pt", padding=True, truncation=True)
+    with torch.no_grad():
+        outputs = model(**inputs)
+        probs = torch.nn.functional.softmax(outputs.logits, dim=1)
+        confidence, prediction = torch.max(probs, dim=1)
+        return {
+            "prediction": prediction.item(),
+            "confidence": float(confidence)
+        }
+
+# Example usage
+if __name__ == "__main__":
+    sample_seq = "ATGGGTTGACTTCCGAAAGTCCGTAGTCG"
+    result = predict_sequence(sample_seq)
+    print(result)
